@@ -1,0 +1,79 @@
+-- Creating films struct
+-- CREATE TYPE films AS (
+-- 	film TEXT,
+-- 	votes INTEGER,
+-- 	rating REAL,
+-- 	filmid TEXT
+-- )
+
+-- Creating quality_class enum
+-- CREATE TYPE quality_class AS ENUM ('star', 'good', 'average', 'bad')
+
+DROP TABLE actors
+
+-- -- Creating actors table (no data yet)
+CREATE TABLE actors (
+	actor TEXT,
+	films films[],
+	quality_class TEXT,
+	is_active TEXT,
+ 	current_year INTEGER
+)
+
+-- -- EDA
+-- SELECT year
+-- FROM actor_films
+
+
+INSERT INTO actors
+WITH yesterday AS (
+	SELECT * FROM actors
+	WHERE current_year = 1972
+),
+	today AS (
+		SELECT * FROM actor_films
+		WHERE "year" = 1973
+	)
+
+SELECT
+	COALESCE (t.actor, y.actor) AS actor,
+	CASE WHEN y.films IS NULL
+		THEN ARRAY[ROW(
+			t.film,
+			t.votes,
+			t.rating,
+			t.filmid
+		)::films]
+	WHEN t.film IS NOT NULL THEN y.films || ARRAY[ROW(
+			t.film,
+			t.votes,
+			t.rating,
+			t.filmid
+		)::films]
+	ELSE y.films
+	END AS films,
+	(CASE 
+    WHEN t.year IS NOT NULL THEN 
+        CASE WHEN t.rating > 8 THEN 'star'
+             WHEN t.rating > 7 THEN 'good'
+             WHEN t.rating > 6 THEN 'average'
+             ELSE 'bad'
+        END
+    ELSE y.quality_class::text
+	END)::quality_class AS quality_class,
+	
+	CASE
+		WHEN t.year = 2026 THEN TRUE
+		ELSE FALSE
+	END AS is_active,
+	COALESCE(t.year, y.current_year + 1) AS current_year
+	
+	
+FROM today t FULL OUTER JOIN yesterday y
+	ON t.actor = y.actor
+
+
+SELECT *
+FROM actors
+WHERE quality_class = 'star'
+
