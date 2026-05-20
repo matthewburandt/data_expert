@@ -1,3 +1,4 @@
+
 CREATE TABLE actors_history_scd (
 	actor TEXT,
 	start_date INTEGER,
@@ -6,3 +7,4 @@ CREATE TABLE actors_history_scd (
 	is_active BOOLEAN,
 	current_year INTEGER
 )
+
